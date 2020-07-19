@@ -1,0 +1,15 @@
+------------------
+Order Details
+-----------------
+Order ID: 2084863
+Date: 20200715
+
+
+----------------------
+Feature Types
+-----------------------
+ - Regional Districts - Legally Defined Administrative Areas of BC in subdirectory ABMS_REGIONAL_DISTRICTS_SP
+
+----------------------------
+Packaged Products
+----------------------------
