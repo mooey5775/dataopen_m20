@@ -1,0 +1,124 @@
+---
+title: "Clean and Processes Vancouver Rental REvenue"
+output: pdf_document
+---
+
+```{r}
+setwd('C:/Users/marti/Documents/Berkeley/Citadel Data thon/EDA')
+
+vancouver_roomprice_19<-read.csv('vancouver_room_revenues_2010_2019.csv')
+vancouver_roomprice_10<-read.csv('vancouver_room_revenues_2000_2010.csv')
+```
+
+
+
+Data keeping after 2010 looks terrible- analysis will have to be restricted to regions with good data
+```{r}
+
+vancouver_roomprice_19 <- vancouver_roomprice_19[,-4]
+vancouver_roomprice_10 <- vancouver_roomprice_10[,-c(4,6,7)]
+
+vancouver_total <- rbind(vancouver_roomprice_10,vancouver_roomprice_19)
+
+
+vancouver_cleaned_total <- vancouver_total#[complete.cases(vancouver_total),]
+
+new_regions <- sapply(vancouver_cleaned_total$region_code,function(x) as.character(x))
+
+vancouver_cleaned_total$region_code_modified <- new_regions
+
+region_codes <- unique(vancouver_cleaned_total$region_code_modified)
+
+num_codes <- length(region_codes)
+
+
+Regional_data <- list() 
+total_vancouver_rev <- rep(0,12*21)
+par(mfrow=c(1,2))
+for(k in 1:num_codes){
+  region <- vancouver_cleaned_total[which(vancouver_cleaned_total$region_code_modified == region_codes[k]),]
+  region <- region[order(region$year,region$month),]
+  region$revenue[is.na(region$revenue)]<- 0  
+  years <- unique(region$year)
+  n <- 12*length(years)
+  
+  total_revenue <- rep(0,n) 
+  Index <- rep("",n)  
+  for(i in 1:length(years)){
+    for(j in 1:12){
+      temp <- region[which(region$year == years[i] & region$month == j),]
+      total_revenue[(i*12)-12+j] <- sum(temp$revenue) 
+      total_vancouver_rev[(i*12)-12+j] <- total_vancouver_rev[(i*12)-12+j] + total_revenue[(i*12)-12+j] 
+    
+    }
+    
+  }
+
+ 
+
+  plot(1:n,total_revenue, type = 'l', col = 'red',main= paste0("Region ",region_codes[k]))
+ 
+ #storing regional data for analysis
+   Regional_data[[k]] <- total_revenue  
+  
+
+  
+  
+}
+par(mfrow=c(1,1))
+plot(1:252,total_vancouver_rev,type='l',main='Vancouver total revenue 2000-2010')
+
+
+```
+
+Sort out Regions with enough data
+```{r}
+
+filter <- function(Series,cut_off=200){
+  
+  if(length(Series) > cut_off){
+    
+    return(Series)
+  }
+ 
+}
+
+Regions <- sapply(Regional_data,function(x) filter(x))
+Indexes <- sapply (Regional_data, function(x) length(x) > 200)
+Regions_enough_data <- region_codes[Indexes]
+
+par(mfrow=c(1,2))
+for(i in 1:length(Regions)){
+  
+  if(length(Regions[[i]]>1)){
+    
+    plot(1:length(Regions[[i]]),Regions[[i]],type = 'l',col='red')
+    
+  }
+  
+}
+
+
+
+```
+
+
+Convert Regions data to dataframe and write out to do furthe analysis in python
+
+```{r}
+
+Regions_filtered <- Regions[unlist(Indexes)]
+
+Region_df <- as.data.frame(t(do.call(rbind, Regions_filtered)))
+total_vancouver_rev_df <- as.data.frame(total_vancouver_rev)
+
+
+write.csv(Region_df,'C:/Users/marti/Documents/Berkeley/Citadel Data thon/EDA/Room_revenue_region.csv' )
+write.csv(Regions_enough_data,'C:/Users/marti/Documents/Berkeley/Citadel Data thon/EDA/Vancouver_Regions.csv')
+write.csv(total_vancouver_rev_df,'C:/Users/marti/Documents/Berkeley/Citadel Data thon/EDA/Total_room_revenue.csv')
+
+```
+
+
+
+
