@@ -1,0 +1,94 @@
+---
+title: "Brazil Tourism Employment Analysis"
+output: pdf_document
+---
+
+
+
+Conduct differnce in means test on the linear trend of Rio vs Brazil tourism jobs post the janurary 2016 peak. (Data brough over from python notebook)
+
+```{r}
+
+
+Differenced_Data_Brazil = c(-0.02503221, -0.02900012, -0.08011404, -0.01252862,  0.00611218,
+        0.02210225,  0.06874277, -0.09075547,  0.01170731,  0.01106027,
+        0.02054051,  0.10256966, -0.03697156, -0.02391241, -0.08551949,
+       -0.00620461,  0.00309172,  0.02390663,  0.07235442, -0.09674152,
+        0.01159754,  0.01301101,  0.01906253,  0.10163665, -0.03546759,
+       -0.02697332, -0.08190591, -0.00408056,  0.00126904,  0.02237378,
+        0.07004839, -0.09351597,  0.01201061,  0.01317951,  0.01907408,
+        0.10276415)
+
+Differenced_Data_Rio = c(-0.03457079, -0.02203888, -0.07188065, -0.0127779 ,  0.01459286,
+        0.02071588,  0.07660089, -0.10316722,  0.01272471, -0.00079779,
+        0.01785714,  0.10971572, -0.06016647, -0.0219591 , -0.08711839,
+       -0.00952691,  0.00164211,  0.01609536,  0.05835815, -0.09923146,
+        0.01269147,  0.00164211,  0.01594245,  0.10328688, -0.05091879,
+       -0.021394  , -0.07353606, -0.0078848 ,  0.00427481,  0.01549702,
+        0.05541299, -0.09330789,  0.01473248,  0.003005  ,  0.01660063,
+        0.10203702)
+
+
+```
+
+Check Seasonality using periodogram
+```{r}
+n <- length(Differenced_Data_Brazil)
+
+plot(1:(n/2),abs(fft(Differenced_Data_Brazil)[2:(n/2+1)])^2/n,type ='h', main ='Spectral Estimate',ylab= 'Frequency' )
+plot(1:(n/2),abs(fft(Differenced_Data_Rio)[2:(n/2+1)])^2/n,type ='h', main ='Spectral Estimate',ylab= 'Frequency' )
+
+```
+
+
+Modeling the % change in tourism emplyment since the peak of the market in janurary.  The Data has been differenced to make it stationary, we will conduct a hypothesis test that the mean % decline in the Brazil data is different thatn the rio data.  In order to do this we will model the stationary time series as a MA(7) model, which was selected based on AIC score. Once we assume normality of erros we can proceed with inference on the average % decline in tourism employment unemployment. We will test the hypothsis that:
+$$\mu_0 = m_1 $$ where $\mu_0$ is the mean % employment change from the peak for the Rio data and $\mu_1$ is the mean % employment change from the peak for the total Brazil data.
+
+Note, an MA model is always stationary so Augmented Dick Fuller test not neccessary
+
+```{r}
+
+library('forecast')
+
+lines(Differenced_Data_Rio,col='2')
+
+
+
+#checking AIC Score for model fit
+for(j in 7:7){
+  model = arima(Differenced_Data_Rio, order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
+  print(paste0('Rio Data, MA order: ',j,' Aic:',model$aic))
+  model2 = arima(Differenced_Data_Brazil,order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
+   print(paste0('Brazil Data, MA order: ',j,' Aic:',model2$aic))
+  
+
+
+
+#fit MA(7) model
+  model = arima(Differenced_Data_Rio, order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
+  
+  model2 = arima(Differenced_Data_Brazil,order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
+  
+  
+  #Constructin hypothesis test for difference in means
+  mu <- model$coef[2*j+1] - model2$coef[2*j+1]
+  s_e <- sqrt(model$var.coef[2*j+1,2*j+1]/length(Differenced_Data_Rio) + model2$var.coef[2*j+1,2*j+1]/length(Differenced_Data_Brazil))
+  
+  if(mu< (-s_e*1.65)){
+    
+    print('Reject Null')
+    
+  }else{
+    
+    print('Maintain Null')
+  }
+
+}
+forecast = predict(model,length(Differenced_Data_Brazil))
+forecast2 = predict(model,length(Differenced_Data_Rio))
+plot(1:length(Differenced_Data_Brazil),Differenced_Data_Brazil, type = 'l',main='Brazil tourism % employment Change from peak + MA(7) fit')
+lines(1:length(Differenced_Data_Brazil), forecast$pred,col='3')
+plot(1:length(Differenced_Data_Rio),Differenced_Data_Rio, type = 'l',main='Rio tourism % employment Change from peak + MA(7) fit')
+lines(1:length(Differenced_Data_Rio), forecast2$pred,col='3')
+
+```
