@@ -35,11 +35,18 @@ Check Seasonality using periodogram
 ```{r}
 n <- length(Differenced_Data_Brazil)
 
-plot(1:(n/2),abs(fft(Differenced_Data_Brazil)[2:(n/2+1)])^2/n,type ='h', main ='Spectral Estimate',ylab= 'Frequency' )
-plot(1:(n/2),abs(fft(Differenced_Data_Rio)[2:(n/2+1)])^2/n,type ='h', main ='Spectral Estimate',ylab= 'Frequency' )
+plot(1:(n/2),abs(fft(Differenced_Data_Brazil)[2:(n/2+1)])^2/n,type ='h', main ='Spectral Estimate',xlab= 'Frequency' )
+plot(1:(n/2),abs(fft(Differenced_Data_Rio)[2:(n/2+1)])^2/n,type ='h', main ='Spectral Estimate',xlab= 'Frequency' )
 
 ```
 
+check stationary via augmented Dick-FUller test
+
+```{r}
+library(tseries)
+adf_test <- adf.test(Differenced_Data_Brazil, alternative = 'stationary')
+adf_test
+```
 
 Modeling the % change in tourism emplyment since the peak of the market in janurary.  The Data has been differenced to make it stationary, we will conduct a hypothesis test that the mean % decline in the Brazil data is different thatn the rio data.  In order to do this we will model the stationary time series as a MA(7) model, which was selected based on AIC score. Once we assume normality of erros we can proceed with inference on the average % decline in tourism employment unemployment. We will test the hypothsis that:
 $$\mu_0 = m_1 $$ where $\mu_0$ is the mean % employment change from the peak for the Rio data and $\mu_1$ is the mean % employment change from the peak for the total Brazil data.
