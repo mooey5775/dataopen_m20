@@ -51,7 +51,7 @@ adf_test
 Modeling the % change in tourism emplyment since the peak of the market in janurary.  The Data has been differenced to make it stationary, we will conduct a hypothesis test that the mean % decline in the Brazil data is different thatn the rio data.  In order to do this we will model the stationary time series as a MA(7) model, which was selected based on AIC score. Once we assume normality of erros we can proceed with inference on the average % decline in tourism employment unemployment. We will test the hypothsis that:
 $$\mu_0 = m_1 $$ where $\mu_0$ is the mean % employment change from the peak for the Rio data and $\mu_1$ is the mean % employment change from the peak for the total Brazil data.
 
-Note, an MA model is always stationary so Augmented Dick Fuller test not neccessary
+Note, an MA model is always stationary so Augmented Dick Fuller test not neccessary but still useful
 
 ```{r}
 
@@ -62,7 +62,7 @@ lines(Differenced_Data_Rio,col='2')
 
 
 #checking AIC Score for model fit
-for(j in 7:7){
+for(j in 1:8){
   model = arima(Differenced_Data_Rio, order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
   print(paste0('Rio Data, MA order: ',j,' Aic:',model$aic))
   model2 = arima(Differenced_Data_Brazil,order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
@@ -71,10 +71,7 @@ for(j in 7:7){
 
 
 
-#fit MA(7) model
-  model = arima(Differenced_Data_Rio, order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
-  
-  model2 = arima(Differenced_Data_Brazil,order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
+
   
   
   #Constructin hypothesis test for difference in means
@@ -91,6 +88,13 @@ for(j in 7:7){
   }
 
 }
+
+j = 7
+#fit MA(7) model
+model = arima(Differenced_Data_Rio, order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
+  
+model2 = arima(Differenced_Data_Brazil,order = c(0,0,j),seasonal =list(order = c(0,0,j), period = 12))
+
 forecast = predict(model,length(Differenced_Data_Brazil))
 forecast2 = predict(model,length(Differenced_Data_Rio))
 plot(1:length(Differenced_Data_Brazil),Differenced_Data_Brazil, type = 'l',main='Brazil tourism % employment Change from peak + MA(7) fit')
