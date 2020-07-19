@@ -30,3 +30,6 @@ Temporary Items
 # Python caches
 __pycache__
 .ipynb_checkpoints
+
+# Conda environment ymls
+*-environment.yml
